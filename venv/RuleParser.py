@@ -74,15 +74,16 @@ def getSet(upperName, name):
 
 #testing getSet function:
 #print(getSet('driving','bad'))
+#print(values)
 
+#functions to calculate the fuzzy values when the points are in the ascension or descension of a range of a fuzzy value
 def calcAsc(a, alpha, value):
     return (alpha - a  + value) / alpha
 
 def calcDesc(b, beta, value):
     return (b + beta - value) / beta
 
-print(values)
-
+#a function that strips the strings containing the values into variables we can work with
 def valueToVars(str):
     name = ""
     value = 0
@@ -100,6 +101,7 @@ def valueToVars(str):
 
     return name,value
 
+#a function to calculate the membership values of given real values
 def calculate_fuzzy(inputTuple):
     name = inputTuple[0]
     value = int(inputTuple[1])
@@ -129,10 +131,10 @@ def calculate_fuzzy(inputTuple):
 
     return output
 
-fuzzyValues = []
+membershipValues = dict()
 for value in values:
-    fuzzyValues.append(calculate_fuzzy(valueToVars(value)))
+    membershipValues[valueToVars(value)[0]] = calculate_fuzzy(valueToVars(value))
 
-print(fuzzyValues)
+print(membershipValues)
 
 
