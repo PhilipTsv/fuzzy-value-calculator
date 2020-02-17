@@ -61,16 +61,31 @@ for  x in range(0, len(lines)):
 
 print(fuzzyDictionary)
 
+#access a
 def getSet(upperName, name):
     tempList = fuzzyDictionary[upperName]
+    output = []
     for dic in tempList:
         if name in dic:
             #dict.values() returns a view obj so we need to cast it
             #after that it returns a list of lists, so we need to access the 1st (0th) item
-            return list(dic.values())[0]
-        else:
-            print("error!")
-            return
+            output = list(dic.values())[0]
+
+    if (len(output) > 0):
+        return output
+    else:
+        print("error! ", name, " is not a sub key of any dictionary!")
+        return
+
+#handy-dandy function to get all of the sub keys of a key (e.g. get "good","bad","average" in the "driving" dictioanry
+def getSubKeys(upperKey):
+    output = []
+    dics = list(fuzzyDictionary[upperKey])
+    for dic in dics:
+        output.append(list(dic.keys())[0])
+
+    return output
+
 
 #testing getSet function:
 #print(getSet('driving','bad'))
@@ -131,10 +146,88 @@ def calculate_fuzzy(inputTuple):
 
     return output
 
+# calculate the value of each tule
+def calculateRule(string):
+    # for storing the values we get from the rule
+    arguments = []
+    conditions = []
+    # getting the words from the statement and removing empty strings
+    words = string.split(" ")
+
+    for x in range(0, len(words)):
+        #extracting arguments
+        if (words[x] in list(fuzzyDictionary.keys())):
+            #print(list(fuzzyDictionary[words[x]]), words[x+2])
+            if (words[x+1] == "is" and words[x+2] in getSubKeys(words[x])):
+                #print("args: ", words[x], words[x+1], words[x+2])
+                #print(words[x+2], getSet(words[x], words[x+2]))
+
+                for dic in membershipValues.values():
+                    #print(list(dic.keys()))
+                    #print(dic[words[x+2]])
+                    if (words[x+2] in list(dic.keys())):
+                        arguments.append(dic[words[x+2]])
+
+        #extracting conditions
+        if (words[x] == "or" or words[x] == "and"):
+            conditions.append(words[x])
+
+    #conditions should always be twice as less as the arguments
+    if (len(conditions) == len(arguments) / 2):
+        #for each condition - check its type and get its arguments, always n and n+1 for condition = n
+        for x in range(len(conditions)):
+            if conditions[x] == "and":
+                return min(arguments[x],arguments[x+1])
+            elif conditions[x] == "or":
+                return max(arguments[x], arguments[x + 1])
+            else:
+                print("Error, no condition other than \"or\"  or \"and\" expected")
+    else:
+        print("Too or too few conditions in the rule!")
+    return
+
+# take a list with all the rules and calculate the answers for each, then unify their answers if there are more than 1 per option
+def calculateRules(ruleList):
+    setOfRules = set()
+    dic = defaultdict(list)
+
+    # generate all the options
+    for rule in rules:
+        words = rule.split(" ")
+        setOfRules.add(words[len(words)-1])
+    # print(setOfRules)
+
+    # solve each rule using calculateRule(), put the answer in a dictionary, with the option for key
+    for rule in rules:
+        words = rule.split(" ")
+        dic[words[len(words) - 1]].append(calculateRule(rule))
+    #print(dic)
+
+    # for each option, check if there are more than one rules
+    for key in dic:
+        if len(list(dic[key])) > 1:
+            #if so, get their maximum
+            valule = max(list(dic[key]))
+            #print(dic[key])
+            dic[key].clear()
+            dic[key].append(valule)
+
+    return dic
+
+#def calcNewTriagValues():
+
+# create a dictionary of the membership values and their respective keys
 membershipValues = dict()
 for value in values:
-    membershipValues[valueToVars(value)[0]] = calculate_fuzzy(valueToVars(value))
+    tempDict = dict()
+    valuesList = calculate_fuzzy(valueToVars(value))
+    labels = getSubKeys(valueToVars(value)[0])
+
+    for x in range(len(labels)):
+        tempDict[labels[x]] = valuesList[x]
+
+    membershipValues[valueToVars(value)[0]] = tempDict
 
 print(membershipValues)
-
+print(calculateRules(rules))
 
