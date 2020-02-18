@@ -59,9 +59,9 @@ for  x in range(0, len(lines)):
         tempdict[name] = numbers
         fuzzyDictionary[upperName].append(tempdict)
 
-print(fuzzyDictionary)
+#print(fuzzyDictionary)
 
-#access a
+# access the fuzzy tuples in the dictionary by providing the names of the set and subset
 def getSet(upperName, name):
     tempList = fuzzyDictionary[upperName]
     output = []
@@ -98,7 +98,8 @@ def calcAsc(a, alpha, value):
 def calcDesc(b, beta, value):
     return (b + beta - value) / beta
 
-#a function that strips the strings containing the values into variables we can work with
+# a function that strips the strings containing the values into variables we can work with
+# example: driving = 85 to 'driving','85'
 def valueToVars(str):
     name = ""
     value = 0
@@ -116,7 +117,7 @@ def valueToVars(str):
 
     return name,value
 
-#a function to calculate the membership values of given real values
+# a function to calculate the membership values of given real values
 def calculate_fuzzy(inputTuple):
     name = inputTuple[0]
     value = int(inputTuple[1])
@@ -146,7 +147,7 @@ def calculate_fuzzy(inputTuple):
 
     return output
 
-# calculate the value of each tule
+# calculate the value of each rule
 def calculateRule(string):
     # for storing the values we get from the rule
     arguments = []
@@ -214,7 +215,20 @@ def calculateRules(ruleList):
 
     return dic
 
-#def calcNewTriagValues():
+# calculate the area to exclude
+def calcTriagValues(ratio, unknown):
+    ratioToExclude = 1 - ratio
+    a = unknown[0]
+    b = unknown[1]
+    alpha = unknown[2]
+    beta = unknown[3]
+
+    oldBase = (b + beta) - (a - alpha)
+    newBase = ratioToExclude * oldBase
+    #print(oldBase, newBase, ratioToExclude, (oldBase / 2) - ((ratioToExclude * newBase) / 2))
+    # output 1: old area - the area to exclude
+    # output 2: the average of (the beginning, the end and where the height falls) of the base
+    return (oldBase / 2) - ((ratioToExclude * newBase) / 2), ((a - alpha) + a + (b+beta))/3
 
 # create a dictionary of the membership values and their respective keys
 membershipValues = dict()
@@ -228,6 +242,36 @@ for value in values:
 
     membershipValues[valueToVars(value)[0]] = tempDict
 
-print(membershipValues)
-print(calculateRules(rules))
+#print(membershipValues)
+#print(calculateRules(rules))
+
+unknownSet = set(fuzzyDictionary.keys()).difference(set(membershipValues.keys()))
+#quick fix - this should be for each
+unknown = ''
+if len(unknownSet) == 1:
+    unknown = unknownSet.pop()
+
+calculationsDic = calculateRules(rules)
+
+outputList = list()
+for key in calculationsDic.copy():
+    ruleValue = calculationsDic[key][0]
+    calculationsDic.pop(key)
+    unknownTuple = getSet(unknown, key)
+    #print(ruleValue, unknownTuple)
+
+    if unknownTuple[0] == unknownTuple[1]:
+        if ruleValue > 0:
+            outputList.append(calcTriagValues(ruleValue, unknownTuple))
+        #print(outputList)
+
+    if len(calculationsDic) == 0:
+        sum1 = 0
+        sum2 = 0
+        for outputTuple in outputList:
+            sum1 += (outputTuple[0] * outputTuple[1])
+            sum2 += outputTuple[0]
+
+        print(sum1/sum2)
+
 
