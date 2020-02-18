@@ -1,9 +1,10 @@
 from collections import defaultdict
 import os
 
+import Parsing
+
 rules = []
 values = []
-fuzzyDictionary = defaultdict(list)
 
 fileName = "example.txt"
 filepath = os.getcwd() + "\\" + fileName
@@ -14,52 +15,9 @@ def hasNumbers(inputString):
 
 lines = file.read().splitlines()
 
-#removnig the first line - the title
-lines = lines[1:len(lines)]
+lines, values, rules = Parsing.parseLines(lines)
 
-#removing empty lines
-#https://kite.com/python/answers/how-to-remove-empty-strings-from-a-list-of-strings-in-python
-lines = [string for string in lines if string != ""]
-
-#extracting values and rules from the file
-for x in range(0, len(lines)):
-    if "=" in lines[x]:
-        values.append(lines[x])
-    elif "Rule " in lines[x]:
-        rules.append(lines[x])
-
-#removing values from lines
-lines = [x for x in lines if x not in values]
-
-#remove rules from lines
-lines = [x for x in lines if x not in rules]
-
-#print(lines)
-#print(values)
-#print(rules)
-
-upperName = ""
-for  x in range(0, len(lines)):
-    if hasNumbers(lines[x]) is False:
-        upperName = lines[x].strip()
-    else:
-        tempdict = dict()
-        words = lines[x].split(" ")
-        #removing empty strings, if any
-        #https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
-        words = list(filter(None, words))
-        name = ""
-        numbers = []
-        for word in words:
-            if hasNumbers(word) is False:
-                name = word
-            else:
-                numbers.append(int(word))
-
-        tempdict[name] = numbers
-        fuzzyDictionary[upperName].append(tempdict)
-
-#print(fuzzyDictionary)
+fuzzyDictionary = Parsing.generateDict(lines)
 
 # access the fuzzy tuples in the dictionary by providing the names of the set and subset
 def getSet(upperName, name):
@@ -86,36 +44,9 @@ def getSubKeys(upperKey):
 
     return output
 
-
 #testing getSet function:
 #print(getSet('driving','bad'))
 #print(values)
-
-#functions to calculate the fuzzy values when the points are in the ascension or descension of a range of a fuzzy value
-def calcAsc(a, alpha, value):
-    return (alpha - a  + value) / alpha
-
-def calcDesc(b, beta, value):
-    return (b + beta - value) / beta
-
-# a function that strips the strings containing the values into variables we can work with
-# example: driving = 85 to 'driving','85'
-def valueToVars(str):
-    name = ""
-    value = 0
-
-    #getting the words from the statement and stripping white space
-    words = str.split(" ")
-    words = list(filter(None, words))
-
-    for word in words:
-        word = word.strip()
-        if hasNumbers(word) is False and word is not "=":
-            name = word
-        elif (hasNumbers(word)):
-            value = word
-
-    return name,value
 
 # a function to calculate the membership values of given real values
 def calculate_fuzzy(inputTuple):
@@ -137,10 +68,10 @@ def calculate_fuzzy(inputTuple):
             output.append(1)
         #if fuziness is within alpha - a
         elif (value > (a - alpha) and value < a):
-            output.append(calcAsc(a, alpha, value))
+            output.append((alpha - a  + value) / alpha)
         #if fuziness is within b - beta
         elif (value > b and value < (beta + b)):
-            output.append(calcDesc(b, beta, value))
+            output.append((b + beta - value) / beta)
         #all other cases - a few of them - fuziness is 0
         else:
             output.append(0)
@@ -234,13 +165,13 @@ def calcTriagValues(ratio, unknown):
 membershipValues = dict()
 for value in values:
     tempDict = dict()
-    valuesList = calculate_fuzzy(valueToVars(value))
-    labels = getSubKeys(valueToVars(value)[0])
+    valuesList = calculate_fuzzy(Parsing.valueToVars(value))
+    labels = getSubKeys(Parsing.valueToVars(value)[0])
 
     for x in range(len(labels)):
         tempDict[labels[x]] = valuesList[x]
 
-    membershipValues[valueToVars(value)[0]] = tempDict
+    membershipValues[Parsing.valueToVars(value)[0]] = tempDict
 
 #print(membershipValues)
 #print(calculateRules(rules))
