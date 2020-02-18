@@ -1,23 +1,24 @@
 from collections import defaultdict
 import os
-
+#local files
 import Parsing
 
-rules = []
-values = []
+#rules = []
+#statement = []
 
 fileName = "example.txt"
 filepath = os.getcwd() + "\\" + fileName
 file = open(filepath, 'r')
 
+# splitting the file into a list of lines
+lines = file.read().splitlines()
+# parsing the lines and etracting the rules and statements from them
+lines, statements, rules = Parsing.parseLines(lines)
+# creating a dictionary with all fuzzy sets
+fuzzyDictionary = Parsing.generateDict(lines)
+
 def hasNumbers(inputString):
     return any(char.isdigit() for char in inputString)
-
-lines = file.read().splitlines()
-
-lines, values, rules = Parsing.parseLines(lines)
-
-fuzzyDictionary = Parsing.generateDict(lines)
 
 # access the fuzzy tuples in the dictionary by providing the names of the set and subset
 def getSet(upperName, name):
@@ -35,7 +36,7 @@ def getSet(upperName, name):
         print("error! ", name, " is not a sub key of any dictionary!")
         return
 
-#handy-dandy function to get all of the sub keys of a key (e.g. get "good","bad","average" in the "driving" dictioanry
+#handy-dandy function to get all of the sub keys of a key (e.g. get "good","bad","average" in the "driving" dictioanry)
 def getSubKeys(upperKey):
     output = []
     dics = list(fuzzyDictionary[upperKey])
@@ -46,10 +47,10 @@ def getSubKeys(upperKey):
 
 #testing getSet function:
 #print(getSet('driving','bad'))
-#print(values)
+#print(statement)
 
 # a function to calculate the membership values of given real values
-def calculate_fuzzy(inputTuple):
+def calculateFuzzy(inputTuple):
     name = inputTuple[0]
     value = int(inputTuple[1])
     fuzzyDict = fuzzyDictionary[name]
@@ -127,7 +128,7 @@ def calculateRules(ruleList):
     for rule in rules:
         words = rule.split(" ")
         setOfRules.add(words[len(words)-1])
-    # print(setOfRules)
+    #print(setOfRules)
 
     # solve each rule using calculateRule(), put the answer in a dictionary, with the option for key
     for rule in rules:
@@ -163,15 +164,15 @@ def calcTriagValues(ratio, unknown):
 
 # create a dictionary of the membership values and their respective keys
 membershipValues = dict()
-for value in values:
+for statementLine in statements:
     tempDict = dict()
-    valuesList = calculate_fuzzy(Parsing.valueToVars(value))
-    labels = getSubKeys(Parsing.valueToVars(value)[0])
+    valuesList = calculateFuzzy(Parsing.statementToVars(statementLine))
+    labels = getSubKeys(Parsing.statementToVars(statementLine)[0])
 
     for x in range(len(labels)):
         tempDict[labels[x]] = valuesList[x]
 
-    membershipValues[Parsing.valueToVars(value)[0]] = tempDict
+    membershipValues[Parsing.statementToVars(statementLine)[0]] = tempDict
 
 #print(membershipValues)
 #print(calculateRules(rules))
@@ -204,5 +205,3 @@ for key in calculationsDic.copy():
             sum2 += outputTuple[0]
 
         print(sum1/sum2)
-
-

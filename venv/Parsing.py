@@ -5,7 +5,7 @@ def hasNumbers(inputString):
 
 def parseLines(lines):
     rules = []
-    values = []
+    statement = []
 
     # removnig the first line - the title
     lines = lines[1:len(lines)]
@@ -17,21 +17,21 @@ def parseLines(lines):
     # extracting values and rules from the file
     for x in range(0, len(lines)):
         if "=" in lines[x]:
-            values.append(lines[x])
+            statement.append(lines[x])
         elif "Rule " in lines[x]:
             rules.append(lines[x])
 
     # removing values from lines
-    lines = [x for x in lines if x not in values]
+    lines = [x for x in lines if x not in statement]
 
     # remove rules from lines
     lines = [x for x in lines if x not in rules]
 
     # print(lines)
-    # print(values)
+    # print(statement)
     # print(rules)
 
-    return lines, values, rules
+    return lines, statement, rules
 
 def generateDict(linesList):
     dic = defaultdict(list)
@@ -61,7 +61,7 @@ def generateDict(linesList):
 
 # a function that strips the strings containing the values into variables we can work with
 # example: driving = 85 to 'driving','85'
-def valueToVars(str):
+def statementToVars(str):
     name = ""
     value = 0
 
